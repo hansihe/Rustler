@@ -36,6 +36,8 @@ rustler::rustler_export_nifs!(
         ("term_debug", 1, test_term::term_debug),
         ("term_eq", 2, test_term::term_eq),
         ("term_cmp", 2, test_term::term_cmp),
+        ("term_internal_hash", 2, test_term::term_internal_hash),
+        ("term_phash2_hash", 1, test_term::term_phash2_hash),
 
         ("sum_map_values", 1, test_map::sum_map_values),
         ("map_entries_sorted", 1, test_map::map_entries_sorted),

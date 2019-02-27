@@ -45,6 +45,8 @@ pub use erlang_nif_sys::NIF_MINOR_VERSION;
 pub use erlang_nif_sys::ERL_NIF_BIN2TERM_SAFE;
 pub use erlang_nif_sys::ErlNifBinaryToTerm as NIF_BINARY_TO_TERM_OPTS;
 
+pub use erlang_nif_sys::ErlNifHash as NIF_HASH_TYPE;
+
 #[repr(C)]
 pub enum ErlNifTaskFlags {
     ERL_NIF_NORMAL_JOB = 0,
@@ -375,3 +377,8 @@ wrap_number!(c_uint, enif_make_uint, enif_get_uint);
 wrap_number!(i64, enif_make_int64, enif_get_int64);
 wrap_number!(u64, enif_make_uint64, enif_get_uint64);
 wrap_number!(c_double, enif_make_double, enif_get_double);
+
+// Term generic
+pub unsafe fn enif_hash(hash_type: NIF_HASH_TYPE, term: NIF_TERM, salt: u64) -> u64 {
+    erlang_nif_sys::enif_hash(hash_type, term, salt)
+}

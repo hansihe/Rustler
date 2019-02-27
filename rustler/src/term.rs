@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::fmt::{self, Debug};
+use std::hash::{ Hash, Hasher };
 use types::binary::OwnedBinary;
 use wrapper::env::term_to_binary;
 use wrapper::nif_interface::NIF_TERM;
@@ -80,6 +81,35 @@ impl<'a> Term<'a> {
         let raw_binary = unsafe { term_to_binary(self.env.as_c_arg(), self.as_c_arg()) }.unwrap();
         unsafe { OwnedBinary::from_raw(raw_binary) }
     }
+
+    /// Non-portable hash function that only guarantees the same hash for the same term within
+    /// one Erlang VM instance.
+    ///
+    /// It takes 32-bit salt values and generates hashes within 0..2^32-1.
+    pub fn hash_internal(&self, salt: u32) -> u32 {
+        unsafe {
+            ::wrapper::nif_interface::enif_hash(
+                ::wrapper::nif_interface::NIF_HASH_TYPE::ERL_NIF_INTERNAL_HASH,
+                self.as_c_arg(),
+                salt as u64
+            ) as u32
+        }
+    }
+
+    /// Portable hash function that gives the same hash for the same Erlang term regardless of
+    /// machine architecture and ERTS version.
+    ///
+    /// It generates hashes within 0..2^27-1.
+    pub fn hash_phash2(&self) -> u32 {
+        unsafe {
+            ::wrapper::nif_interface::enif_hash(
+                ::wrapper::nif_interface::NIF_HASH_TYPE::ERL_NIF_PHASH2,
+                self.as_c_arg(),
+                0
+            ) as u32
+        }
+    }
+
 }
 
 impl<'a> PartialEq for Term<'a> {
@@ -108,6 +138,15 @@ impl<'a> Ord for Term<'a> {
 impl<'a> PartialOrd for Term<'a> {
     fn partial_cmp(&self, other: &Term<'a>) -> Option<Ordering> {
         Some(cmp(self, other))
+    }
+}
+
+impl<'a> Hash for Term<'a> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        // As far as I can see, there is really no way
+        // to get a seed from the hasher. This is definitely
+        // not optimal, but it's the best we can do for now.
+        state.write_u32(self.hash_internal(0));
     }
 }
 

@@ -3,7 +3,7 @@ use wrapper::nif_interface::{self, ErlNifPid};
 use wrapper::pid;
 use {Decoder, Encoder, Env, Error, NifResult, Term};
 
-#[derive(Clone)]
+#[derive(Copy, Clone)]
 pub struct Pid {
     c: ErlNifPid,
 }

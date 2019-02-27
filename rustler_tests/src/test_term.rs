@@ -20,10 +20,20 @@ mod atoms {
 pub fn term_eq<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     Ok((args[0] == args[1]).encode(env))
 }
+
 pub fn term_cmp<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
     match Ord::cmp(&args[0], &args[1]) {
         Ordering::Equal => Ok(atoms::equal().encode(env)),
         Ordering::Less => Ok(atoms::less().encode(env)),
         Ordering::Greater => Ok(atoms::greater().encode(env)),
     }
+}
+
+pub fn term_internal_hash<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+    let salt: u32 = args[1].decode()?;
+    Ok(args[0].hash_internal(salt).encode(env))
+}
+
+pub fn term_phash2_hash<'a>(env: Env<'a>, args: &[Term<'a>]) -> NifResult<Term<'a>> {
+    Ok(args[0].hash_phash2().encode(env))
 }

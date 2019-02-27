@@ -38,4 +38,23 @@ defmodule RustlerTest.TermTest do
     assert RustlerTest.term_cmp(5, :test) == :less
   end
 
+  test "term hash" do
+    assert RustlerTest.term_phash2_hash(:foobar) == :erlang.phash2(:foobar)
+    assert RustlerTest.term_phash2_hash("testing") == :erlang.phash2("testing")
+    assert RustlerTest.term_phash2_hash(42) == :erlang.phash2(42)
+
+    # Assume a certain distribution
+    unique = 0..100
+    |> Enum.map(&RustlerTest.term_phash2_hash(&1))
+    |> Enum.group_by(fn n -> n end, fn n -> n end)
+    |> map_size
+    assert unique > 50
+
+    unique = 0..100
+    |> Enum.map(&RustlerTest.term_internal_hash(&1, 0))
+    |> Enum.group_by(fn n -> n end, fn n -> n end)
+    |> map_size
+    assert unique > 50
+  end
+
 end

@@ -21,6 +21,8 @@ defmodule RustlerTest do
   def term_debug(_), do: err()
   def term_eq(_, _), do: err()
   def term_cmp(_, _), do: err()
+  def term_internal_hash(_, _), do: err()
+  def term_phash2_hash(_), do: err()
 
   def sum_map_values(_), do: err()
   def map_entries_sorted(_), do: err()

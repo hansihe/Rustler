@@ -25,7 +25,6 @@ defmodule Mix.Tasks.Rustler.New do
 
   for {format, source, _} <- @basic do
     unless format == :keep do
-      @external_resource Path.join(root, source)
       defp render(unquote(source)), do: unquote(File.read!(Path.join(root, source)))
     end
   end
@@ -68,8 +67,12 @@ defmodule Mix.Tasks.Rustler.New do
 
     check_module_name_validity!(module)
 
-    path = Path.join([File.cwd!(), "native/", name])
+    sub_path = Path.join("native", name)
+
+    path = Path.join([File.cwd!(), sub_path])
     new(otp_app, path, module, name, opts)
+
+    add_to_workspace(sub_path)
   end
 
   defp new(otp_app, path, module, name, _opts) do
@@ -87,6 +90,36 @@ defmodule Mix.Tasks.Rustler.New do
     copy_from(path, binding, @basic)
 
     Mix.Shell.IO.info([:green, "Ready to go! See #{path}/README.md for further instructions."])
+  end
+
+  defp add_to_workspace(sub_path) do
+    Mix.Shell.IO.info([:green, "Adding #{sub_path} to workspace"])
+    cargo_toml_fn = Path.join(File.cwd!(), "Cargo.toml")
+
+    cargo_toml =
+      case Toml.decode_file(cargo_toml_fn) do
+        {:ok, data} ->
+          data
+
+        {:error, _} ->
+          %{}
+      end
+
+    workspace = Map.get(cargo_toml, "workspace", %{})
+
+    members =
+      MapSet.new(Map.get(workspace, "members", []))
+      |> MapSet.put(sub_path)
+      |> MapSet.to_list()
+
+    workspace_section = """
+    [workspace]
+    members = [#{members |> Enum.map(&inspect/1) |> Enum.join(", ")}]
+    """
+
+    # TODO: Only replace the existing workspace.members entry
+
+    File.write(cargo_toml_fn, workspace_section)
   end
 
   defp check_module_name_validity!(name) do

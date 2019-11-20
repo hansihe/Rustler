@@ -31,12 +31,7 @@ defmodule Rustler do
       value. If you have more than one crate in your project, you will need to
       be explicit about which crate you intend to use.
 
-    * `:default_features` - a boolean to specify whether the crate's default features
-      should be used.
-
     * `:env` - Specify a list of environment variables when envoking the compiler.
-
-    * `:features` - a list of features to enable when compiling the crate.
 
     * `:load_data` - Any valid term. This value is passed into the NIF when it is
       loaded (default: `0`)
@@ -53,12 +48,6 @@ defmodule Rustler do
       this option, a default will be provide based on the `Mix.env()`:
       - When `Mix.env()` is `:dev` or `:test`, the crate will be compiled in `:debug` mode.
       - When `Mix.env()` is `:prod` or `:bench`, the crate will be compiled in `:release` mode.
-
-    * `:path` - By default, rustler expects the crate to be found in `native/<crate>` in the
-      root of the project. Use this option to override this.
-
-    * `:skip_compilation?` - This option skips envoking the rust compiler. Specify this option
-      in combination with `:load_from` to load a pre-compiled artifact.
 
     * `:target` - Specify a compile [target] triple.
 
@@ -80,12 +69,8 @@ defmodule Rustler do
     quote bind_quoted: [opts: opts] do
       config = Rustler.Compiler.compile_crate(__MODULE__, opts)
 
-      for resource <- config.external_resources do
-        @external_resource resource
-      end
-
       if config.lib do
-        @load_from config.load_from
+        @load_from {config.otp_app, config.load_path}
         @load_data config.load_data
 
         @before_compile Rustler
@@ -105,10 +90,7 @@ defmodule Rustler do
 
         {otp_app, path} = @load_from
 
-        load_path =
-          otp_app
-          |> Application.app_dir(path)
-          |> to_charlist()
+        load_path = Path.join(:code.priv_dir(otp_app), path) |> to_charlist()
 
         :erlang.load_nif(load_path, @load_data)
       end
@@ -116,6 +98,7 @@ defmodule Rustler do
   end
 
   @doc false
+  @spec rustler_version() :: binary()
   def rustler_version, do: "0.22.0-rc.0"
 
   @doc """

@@ -14,7 +14,7 @@ defmodule BinaryExampleTest do
   end
 
   defp assert_exists(name, {:win32, _} = type) do
-    assert File.exists?("priv/native/#{name}.exe")
+    assert File.exists?("priv/crates/#{name}.exe")
   end
 
   defp assert_exists(name, type) do

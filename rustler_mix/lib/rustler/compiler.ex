@@ -8,7 +8,8 @@ defmodule Rustler.Compiler do
   def compile_crate(module, opts) do
     shell = Mix.shell()
     otp_app = Keyword.fetch!(opts, :otp_app)
-    crate = Atom.to_string(Keyword.fetch!(opts, :crate))
+
+    crate = ensure_string(Keyword.fetch!(opts, :crate))
     config = Config.from(otp_app, module, opts)
 
     artifacts = Server.build()
@@ -42,5 +43,17 @@ defmodule Rustler.Compiler do
       end
 
     "crates/#{entry[:name]}/#{entry[:version]}/#{type}"
+  end
+
+  defp ensure_string(atom) when is_atom(atom) do
+    Atom.to_string(atom)
+  end
+
+  defp ensure_string(list) when is_list(list) do
+    IO.iodata_to_binary(list)
+  end
+
+  defp ensure_string(str) when is_binary(str) do
+    str
   end
 end

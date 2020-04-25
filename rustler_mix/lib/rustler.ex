@@ -69,10 +69,12 @@ defmodule Rustler do
     quote bind_quoted: [opts: opts] do
       config = Rustler.Compiler.compile_crate(__MODULE__, opts)
 
-      if config.lib do
-        @load_from {config.otp_app, config.load_path}
-        @load_data config.load_data
+      @load_from {config.otp_app, config.load_path}
 
+      if config.lib do
+        @load_data config.load_data
+        @before_compile {Rustler, :__before_compile_nif__}
+      else
         @before_compile Rustler
       end
     end
@@ -80,19 +82,31 @@ defmodule Rustler do
 
   defmacro __before_compile__(_env) do
     quote do
+      def rustler_path do
+        {otp_app, path} = @load_from
+        Path.join(:code.priv_dir(otp_app), path)
+      end
+    end
+  end
+
+  defmacro __before_compile_nif__(_env) do
+    quote do
       @on_load :rustler_init
+
+      def rustler_path do
+        # TODO: Parametrise, and keep all crates in the list
+        {otp_app, path} = @load_from
+        Path.join(:code.priv_dir(otp_app), path)
+      end
 
       @doc false
       def rustler_init do
         # Remove any old modules that may be loaded so we don't get
         # {:error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
         :code.purge(__MODULE__)
-
-        {otp_app, path} = @load_from
-
-        load_path = Path.join(:code.priv_dir(otp_app), path) |> to_charlist()
-
-        :erlang.load_nif(load_path, @load_data)
+        load_path = String.to_charlist(rustler_path())
+        data = @load_data
+        :erlang.load_nif(load_path, data)
       end
     end
   end

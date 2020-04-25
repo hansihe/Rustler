@@ -20,8 +20,6 @@ defmodule Rustler.Compiler.Server do
 
   @impl true
   def handle_call(:compile, _from, nil) do
-    shell = Mix.shell()
-    _otp_app = Mix.Project.config() |> Keyword.get(:app)
     is_release = Mix.env() in [:prod, :bench]
 
     cargo_opts = %{
@@ -30,6 +28,13 @@ defmodule Rustler.Compiler.Server do
 
     cargo = :cargo.init(File.cwd!(), cargo_opts)
     artifacts = :cargo.build_and_capture(cargo)
+
+    # This drops the unique key in favour of the crate name
+    artifacts =
+      artifacts
+      |> Map.values()
+      |> Map.new(&{&1[:name], &1})
+
     {:reply, artifacts, artifacts}
   end
 

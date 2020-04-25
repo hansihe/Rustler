@@ -14,17 +14,17 @@ defmodule Rustler.Compiler do
     artifacts = Server.build()
 
     is_release = Mix.env() in [:prod, :bench]
+    entry = artifacts[crate]
 
-    entry =
-      artifacts
-      |> Map.values()
-      |> Enum.find(&(crate == &1[:name]))
-
+    # Only a single file result per crate is supported right now
     [filename] = entry[:filenames]
-    out_path = Path.join(priv_dir(entry, is_release), Path.basename(filename))
-    shell.info("  Copying file #{filename} to #{out_path}")
+    rel_filename = Path.basename(filename)
 
+    out_path = Path.join(priv_dir(entry, is_release), Path.basename(filename))
     dest = Path.join(:code.priv_dir(config.otp_app), out_path)
+    rel_dest = Path.relative_to_cwd(dest)
+
+    shell.info("  Copying #{rel_filename} to #{rel_dest}")
     File.mkdir_p!(Path.dirname(dest))
     File.copy!(filename, dest)
 

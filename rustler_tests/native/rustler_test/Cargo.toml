@@ -13,10 +13,6 @@ crate-type = ["cdylib"]
 name = "hello_rust"
 path = "src/main.rs"
 
-[[bin]]
-name = "hello_rust2"
-path = "src/main.rs"
-
 [dependencies]
 lazy_static = "1.4"
 rustler = { path = "../../../rustler" }

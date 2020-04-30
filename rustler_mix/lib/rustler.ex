@@ -90,25 +90,27 @@ defmodule Rustler do
   end
 
   defmacro __before_compile_nif__(_env) do
-    quote do
-      @on_load :rustler_init
+    quoted =
+      quote do
+        def rustler_path do
+          # TODO: Parametrise, and keep all crates in the list
+          {otp_app, path} = @load_from
+          Path.join(:code.priv_dir(otp_app), path)
+        end
 
-      def rustler_path do
-        # TODO: Parametrise, and keep all crates in the list
-        {otp_app, path} = @load_from
-        Path.join(:code.priv_dir(otp_app), path)
+        @on_load :rustler_init
+        @doc false
+        def rustler_init do
+          # Remove any old modules that may be loaded so we don't get
+          # :error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
+          :code.purge(__MODULE__)
+          load_path = String.to_charlist(rustler_path())
+          :ok = :erlang.load_nif(load_path, @load_data)
+        end
       end
 
-      @doc false
-      def rustler_init do
-        # Remove any old modules that may be loaded so we don't get
-        # {:error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
-        :code.purge(__MODULE__)
-        load_path = String.to_charlist(rustler_path())
-        data = @load_data
-        :erlang.load_nif(load_path, data)
-      end
-    end
+    # quoted |> Macro.to_string |> IO.puts
+    quoted
   end
 
   @doc false

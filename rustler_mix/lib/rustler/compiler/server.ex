@@ -26,14 +26,15 @@ defmodule Rustler.Compiler.Server do
       release: is_release
     }
 
+    Mix.shell().info("Starting build in #{File.cwd!()}")
+
     cargo = :cargo.init(File.cwd!(), cargo_opts)
-    artifacts = :cargo.build_and_capture(cargo)
+    artifacts = :cargo.build(cargo)
 
     # This drops the unique key in favour of the crate name
     artifacts =
       artifacts
-      |> Map.values()
-      |> Map.new(&{&1[:name], &1})
+      |> Map.new(&{:cargo_artifact.name(&1), &1})
 
     {:reply, artifacts, artifacts}
   end

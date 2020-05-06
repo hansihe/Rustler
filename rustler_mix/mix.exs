@@ -24,7 +24,7 @@ defmodule Rustler.Mixfile do
 
   defp deps do
     [
-      {:cargo, git: "https://github.com/filmor/erlang-cargo.git"},
+      {:cargo, git: "https://github.com/rusterlium/erlang-cargo.git"},
       {:toml, "~> 0.6"},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false}
     ]

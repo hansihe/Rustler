@@ -1,5 +1,5 @@
 %{
-  "cargo": {:git, "https://github.com/rusterlium/erlang-cargo.git", "f2a2ac09c7e34bdcbac9bd0c2ccb73d8b74e2490", []},
+  "cargo": {:hex, :cargo, "0.1.2", "1245b5a21454ebeabacf403911d54a82a0d457a3f635511a03ad06845f5abf95", [:mix, :rebar3], [{:jsx, "~> 2.8", [hex: :jsx, repo: "hexpm", optional: false]}], "hexpm", "eb614ba74f9f5b61643e5cc607bbf7ddc8420d368661e31c04e0db7ad47e21b3"},
   "earmark_parser": {:hex, :earmark_parser, "1.4.13", "0c98163e7d04a15feb62000e1a891489feb29f3d10cb57d4f845c405852bbef8", [:mix], [], "hexpm", "d602c26af3a0af43d2f2645613f65841657ad6efc9f0e361c3b6c06b578214ba"},
   "ex_doc": {:hex, :ex_doc, "0.24.2", "e4c26603830c1a2286dae45f4412a4d1980e1e89dc779fcd0181ed1d5a05c8d9", [:mix], [{:earmark_parser, "~> 1.4.0", [hex: :earmark_parser, repo: "hexpm", optional: false]}, {:makeup_elixir, "~> 0.14", [hex: :makeup_elixir, repo: "hexpm", optional: false]}, {:makeup_erlang, "~> 0.1", [hex: :makeup_erlang, repo: "hexpm", optional: false]}], "hexpm", "e134e1d9e821b8d9e4244687fb2ace58d479b67b282de5158333b0d57c6fb7da"},
   "jsx": {:hex, :jsx, "2.11.0", "08154624050333919b4ac1b789667d5f4db166dc50e190c4d778d1587f102ee0", [:rebar3], [], "hexpm", "eed26a0d04d217f9eecefffb89714452556cf90eb38f290a27a4d45b9988f8c0"},

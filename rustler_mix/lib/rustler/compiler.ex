@@ -2,7 +2,6 @@ defmodule Rustler.Compiler do
   @moduledoc false
 
   alias Rustler.Compiler.{Config}
-  alias Rustler.Compiler.{Server}
 
   @doc false
   def compile_crate(module, opts) do
@@ -12,9 +11,9 @@ defmodule Rustler.Compiler do
     crate = ensure_string(Keyword.fetch!(opts, :crate))
     config = Config.from(otp_app, module, opts)
 
-    artifacts = Server.build()
+    is_release = config.mode == :release
+    artifacts = do_compile(crate, is_release)
 
-    is_release = Mix.env() in [:prod, :bench]
     entry = artifacts[crate]
 
     is_lib = :cargo_artifact.kind(entry) == :cdylib
@@ -76,5 +75,20 @@ defmodule Rustler.Compiler do
 
   defp ensure_string(str) when is_binary(str) do
     str
+  end
+
+  defp do_compile(crate, is_release) do
+    cargo_opts = %{
+      release: is_release
+    }
+
+    Mix.shell().info("Starting build in #{File.cwd!()}")
+
+    cargo = :cargo.init(File.cwd!(), cargo_opts)
+
+    artifacts = :cargo.build(cargo, crate)
+
+    # This drops the unique key in favour of the crate name
+    artifacts |> Map.new(&{:cargo_artifact.name(&1), &1})
   end
 end

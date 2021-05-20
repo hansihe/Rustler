@@ -91,4 +91,4 @@ EOF
 mix test
 
 echo "Done; cleaning up"
-rm -r $tmp
+rm -rf "$tmp"

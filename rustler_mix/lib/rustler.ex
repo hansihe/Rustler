@@ -31,12 +31,7 @@ defmodule Rustler do
       value. If you have more than one crate in your project, you will need to
       be explicit about which crate you intend to use.
 
-    * `:default_features` - a boolean to specify whether the crate's default features
-      should be used.
-
     * `:env` - Specify a list of environment variables when envoking the compiler.
-
-    * `:features` - a list of features to enable when compiling the crate.
 
     * `:load_data` - Any valid term. This value is passed into the NIF when it is
       loaded (default: `0`)
@@ -53,12 +48,6 @@ defmodule Rustler do
       this option, a default will be provide based on the `Mix.env()`:
       - When `Mix.env()` is `:dev` or `:test`, the crate will be compiled in `:debug` mode.
       - When `Mix.env()` is `:prod` or `:bench`, the crate will be compiled in `:release` mode.
-
-    * `:path` - By default, rustler expects the crate to be found in `native/<crate>` in the
-      root of the project. Use this option to override this.
-
-    * `:skip_compilation?` - This option skips envoking the rust compiler. Specify this option
-      in combination with `:load_from` to load a pre-compiled artifact.
 
     * `:target` - Specify a compile [target] triple.
 
@@ -80,14 +69,12 @@ defmodule Rustler do
     quote bind_quoted: [opts: opts] do
       config = Rustler.Compiler.compile_crate(__MODULE__, opts)
 
-      for resource <- config.external_resources do
-        @external_resource resource
-      end
+      @load_from {config.otp_app, config.load_path}
 
       if config.lib do
-        @load_from config.load_from
         @load_data config.load_data
-
+        @before_compile {Rustler, :__before_compile_nif__}
+      else
         @before_compile Rustler
       end
     end
@@ -95,27 +82,39 @@ defmodule Rustler do
 
   defmacro __before_compile__(_env) do
     quote do
-      @on_load :rustler_init
-
-      @doc false
-      def rustler_init do
-        # Remove any old modules that may be loaded so we don't get
-        # {:error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
-        :code.purge(__MODULE__)
-
+      def rustler_path do
         {otp_app, path} = @load_from
-
-        load_path =
-          otp_app
-          |> Application.app_dir(path)
-          |> to_charlist()
-
-        :erlang.load_nif(load_path, @load_data)
+        Path.join(:code.priv_dir(otp_app), path)
       end
     end
   end
 
+  defmacro __before_compile_nif__(_env) do
+    quoted =
+      quote do
+        def rustler_path do
+          # TODO: Parametrise, and keep all crates in the list
+          {otp_app, path} = @load_from
+          Path.join(:code.priv_dir(otp_app), path)
+        end
+
+        @on_load :rustler_init
+        @doc false
+        def rustler_init do
+          # Remove any old modules that may be loaded so we don't get
+          # :error, {:upgrade, 'Upgrade not supported by this NIF library.'}}
+          :code.purge(__MODULE__)
+          load_path = String.to_charlist(rustler_path())
+          :ok = :erlang.load_nif(load_path, @load_data)
+        end
+      end
+
+    # quoted |> Macro.to_string |> IO.puts
+    quoted
+  end
+
   @doc false
+  @spec rustler_version() :: binary()
   def rustler_version, do: "0.22.0-rc.0"
 
   @doc """

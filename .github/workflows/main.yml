@@ -119,8 +119,10 @@ jobs:
       - name: Extend PATH
         run: echo "C:\\ProgramData\\chocolatey\\lib\\Elixir\\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
 
-      - name: Hex
-        run: mix local.hex --force
+      - name: Mix tools
+        run: |
+          mix local.hex --force
+          mix local.rebar --force
 
       - name: Test rustler_mix
         working-directory: rustler_mix

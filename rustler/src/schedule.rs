@@ -12,6 +12,7 @@ pub enum SchedulerFlags {
 }
 
 impl SchedulerFlags {
+    #[inline]
     fn from(n: isize) -> Self {
         match n {
             _ if n == Self::Normal as isize => Self::Normal,
@@ -82,7 +83,7 @@ macro_rules! impl_funcs {
             #[allow(clippy::many_single_char_names)]
             #[inline]
             fn from(($($arg),*): ($($ty),*)) -> Self {
-                Self::$variant(PhantomData, $($arg),*)
+                Self::$func_name($($arg),*)
             }
         }
     };
@@ -91,14 +92,14 @@ macro_rules! impl_funcs {
 impl<N: crate::Nif, T, A, B, C, D, E, F, G> Schedule<N, T, A, B, C, D, E, F, G> {
     #[inline]
     pub fn next(a: A) -> Self {
-        Self::from(a)
+        Self::Next(PhantomData, a)
     }
 }
 
 impl<N: crate::Nif, T, A, B, C, D, E, F, G> From<A> for Schedule<N, T, A, B, C, D, E, F, G> {
     #[inline]
     fn from(a: A) -> Self {
-        Self::Next(PhantomData, a)
+        Self::next(a)
     }
 }
 impl_funcs! { Next2 next2(a: A, b: B,) }

@@ -3,6 +3,7 @@ use rustler_sys::c_char;
 use crate::codegen_runtime::{NifReturnable, NifReturned};
 use crate::wrapper::ErlNifTaskFlags;
 use crate::Env;
+use std::{ffi::CStr, marker::PhantomData};
 
 pub enum SchedulerFlags {
     Normal = ErlNifTaskFlags::ERL_NIF_NORMAL_JOB as isize,
@@ -42,12 +43,13 @@ pub fn consume_timeslice(env: Env, percent: i32) -> bool {
 /// ## Example:
 /// ```rust,ignore
 /// #[nif]
-/// fn factorial(input: u32, result: Option<u32>) -> Schedule<factorial, u32, u32> {
+/// fn factorial(input: u32, result: Option<u32>) -> Schedule<factorial, u32, u32, u32> {
 ///     let result = result.unwrap_or(1);
 ///     if input == 0 {
 ///         Schedule::Result(result)
 ///     } else {
-///         Schedule::Next2(factorial, input - 1, result * input)
+///         // alternatively `Schedule::Next2(std::marker::PhantomData, input - 1, result * input)`
+///         Schedule::next2(input - 1, result * input)
 ///     }
 /// }
 /// ```
@@ -56,13 +58,34 @@ pub enum Schedule<N: crate::Nif, T, A = (), B = (), C = (), D = (), E = (), F = 
     Result(T),
     /// Single- and multiple-argument variants that should reflect the scheduled
     /// NIF's function signature.
-    Next(N, A),
-    Next2(N, A, B),
-    Next3(N, A, B, C),
-    Next4(N, A, B, C, D),
-    Next5(N, A, B, C, D, E),
-    Next6(N, A, B, C, D, E, F),
-    Next7(N, A, B, C, D, E, F, G),
+    Next(PhantomData<N>, A),
+    Next2(PhantomData<N>, A, B),
+    Next3(PhantomData<N>, A, B, C),
+    Next4(PhantomData<N>, A, B, C, D),
+    Next5(PhantomData<N>, A, B, C, D, E),
+    Next6(PhantomData<N>, A, B, C, D, E, F),
+    Next7(PhantomData<N>, A, B, C, D, E, F, G),
+}
+
+macro_rules! impl_func {
+    ($variant:ident $func_name:ident($($arg:ident : $ty:ty,)*)) => {
+        /// Shorthand for creating a [`Schedule`] variant.
+        ///
+        /// [`Schedule`]: crate::schedule::Schedule
+        pub fn $func_name($($arg: $ty),*) -> Self {
+            Self::$variant(PhantomData, $($arg),*)
+        }
+    };
+}
+
+impl<N: crate::Nif, T, A, B, C, D, E, F, G> Schedule<N, T, A, B, C, D, E, F, G> {
+    impl_func! { Next next(a: A,) }
+    impl_func! { Next2 next2(a: A, b: B,) }
+    impl_func! { Next3 next3(a: A, b: B, c: C,) }
+    impl_func! { Next4 next4(a: A, b: B, c: C, d: D,) }
+    impl_func! { Next5 next5(a: A, b: B, c: C, d: D, e: E,) }
+    impl_func! { Next6 next6(a: A, b: B, c: C, d: D, e: E, f: F,) }
+    impl_func! { Next7 next7(a: A, b: B, c: C, d: D, e: E, f: F, g: G,) }
 }
 
 unsafe impl<N, T, A, B, C, D, E, F, G> NifReturnable for Schedule<N, T, A, B, C, D, E, F, G>
@@ -82,7 +105,7 @@ where
         macro_rules! branch {
             ($($arg:tt),*) => (
                 NifReturned::Reschedule {
-                    fun_name: std::ffi::CStr::from_ptr(N::NAME as *const c_char).into(),
+                    fun_name: CStr::from_ptr(N::NAME as *const c_char).into(),
                     flags: SchedulerFlags::from(N::FLAGS as isize),
                     fun: N::RAW_FUNC,
                     args: vec![$($arg.encode(env).as_c_arg()),*],

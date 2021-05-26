@@ -10,6 +10,7 @@ mod test_nif_attrs;
 mod test_primitives;
 mod test_range;
 mod test_resource;
+mod test_schedule;
 mod test_term;
 mod test_thread;
 
@@ -65,6 +66,7 @@ rustler::init!(
         test_codegen::tuplestruct_record_echo,
         test_dirty::dirty_cpu,
         test_dirty::dirty_io,
+        test_schedule::scheduled_fac,
         test_range::sum_range,
         test_error::bad_arg_error,
         test_error::atom_str_error,

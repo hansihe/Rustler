@@ -67,26 +67,43 @@ pub enum Schedule<N: crate::Nif, T, A = (), B = (), C = (), D = (), E = (), F = 
     Next7(PhantomData<N>, A, B, C, D, E, F, G),
 }
 
-macro_rules! impl_func {
+macro_rules! impl_funcs {
     ($variant:ident $func_name:ident($($arg:ident : $ty:ty,)*)) => {
-        /// Shorthand for creating a [`Schedule`] variant.
-        ///
-        /// [`Schedule`]: crate::schedule::Schedule
-        pub fn $func_name($($arg: $ty),*) -> Self {
-            Self::$variant(PhantomData, $($arg),*)
+        impl<N: crate::Nif, T, A, B, C, D, E, F, G> Schedule<N, T, A, B, C, D, E, F, G> {
+            #[inline]
+            pub fn $func_name($($arg: $ty),*) -> Self {
+                Self::$variant(PhantomData, $($arg),*)
+            }
+        }
+
+        impl<N: crate::Nif, T, A, B, C, D, E, F, G> From<($($ty),*)> for Schedule<N, T, A, B, C, D, E, F, G> {
+            #[inline]
+            fn from(($($arg),*): ($($ty),*)) -> Self {
+                Self::$variant(PhantomData, $($arg),*)
+            }
         }
     };
 }
 
 impl<N: crate::Nif, T, A, B, C, D, E, F, G> Schedule<N, T, A, B, C, D, E, F, G> {
-    impl_func! { Next next(a: A,) }
-    impl_func! { Next2 next2(a: A, b: B,) }
-    impl_func! { Next3 next3(a: A, b: B, c: C,) }
-    impl_func! { Next4 next4(a: A, b: B, c: C, d: D,) }
-    impl_func! { Next5 next5(a: A, b: B, c: C, d: D, e: E,) }
-    impl_func! { Next6 next6(a: A, b: B, c: C, d: D, e: E, f: F,) }
-    impl_func! { Next7 next7(a: A, b: B, c: C, d: D, e: E, f: F, g: G,) }
+    #[inline]
+    pub fn next(a: A) -> Self {
+        Self::from(a)
+    }
 }
+
+impl<N: crate::Nif, T, A, B, C, D, E, F, G> From<A> for Schedule<N, T, A, B, C, D, E, F, G> {
+    #[inline]
+    fn from(a: A) -> Self {
+        Self::Next(PhantomData, a)
+    }
+}
+impl_funcs! { Next2 next2(a: A, b: B,) }
+impl_funcs! { Next3 next3(a: A, b: B, c: C,) }
+impl_funcs! { Next4 next4(a: A, b: B, c: C, d: D,) }
+impl_funcs! { Next5 next5(a: A, b: B, c: C, d: D, e: E,) }
+impl_funcs! { Next6 next6(a: A, b: B, c: C, d: D, e: E, f: F,) }
+impl_funcs! { Next7 next7(a: A, b: B, c: C, d: D, e: E, f: F, g: G,) }
 
 unsafe impl<N, T, A, B, C, D, E, F, G> NifReturnable for Schedule<N, T, A, B, C, D, E, F, G>
 where

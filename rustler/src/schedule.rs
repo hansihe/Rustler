@@ -113,6 +113,7 @@ where
             )
         }
 
+        #[allow(clippy::many_single_char_names)]
         match self {
             Self::Result(res) => NifReturned::Term(res.encode(env).as_c_arg()),
             Self::Next(_, a) => branch!(a),

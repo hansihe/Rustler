@@ -70,6 +70,7 @@ pub enum Schedule<N: crate::Nif, T, A = (), B = (), C = (), D = (), E = (), F = 
 macro_rules! impl_funcs {
     ($variant:ident $func_name:ident($($arg:ident : $ty:ty,)*)) => {
         impl<N: crate::Nif, T, A, B, C, D, E, F, G> Schedule<N, T, A, B, C, D, E, F, G> {
+            #[allow(clippy::many_single_char_names)]
             #[inline]
             pub fn $func_name($($arg: $ty),*) -> Self {
                 Self::$variant(PhantomData, $($arg),*)
@@ -77,6 +78,7 @@ macro_rules! impl_funcs {
         }
 
         impl<N: crate::Nif, T, A, B, C, D, E, F, G> From<($($ty),*)> for Schedule<N, T, A, B, C, D, E, F, G> {
+            #[allow(clippy::many_single_char_names)]
             #[inline]
             fn from(($($arg),*): ($($ty),*)) -> Self {
                 Self::$variant(PhantomData, $($arg),*)

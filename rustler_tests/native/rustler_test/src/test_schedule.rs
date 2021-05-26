@@ -6,6 +6,6 @@ fn scheduled_fac(input: u32, result: Option<u32>) -> Schedule<scheduled_fac, u32
     if input == 0 {
         Schedule::Result(result)
     } else {
-        Schedule::next2(input - 1, result * input)
+        (input - 1, result * input).into()
     }
 }

@@ -49,6 +49,7 @@ pub fn consume_timeslice(env: Env, percent: i32) -> bool {
 ///         Schedule::Result(result)
 ///     } else {
 ///         // alternatively `Schedule::Next2(std::marker::PhantomData, input - 1, result * input)`
+///         // alternatively `(input - 1, result * input).into()`
 ///         Schedule::next2(input - 1, result * input)
 ///     }
 /// }

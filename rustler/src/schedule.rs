@@ -58,7 +58,7 @@ pub enum Schedule<N: crate::Nif, T, A = (), B = (), C = (), D = (), E = (), F = 
     Return(T),
     /// Single- and multiple-argument variants that should reflect the scheduled
     /// NIF's function signature.
-    Continue(PhantomData<N>, SchedulerFlags, A),
+    Continue1(PhantomData<N>, SchedulerFlags, A),
     Continue2(PhantomData<N>, SchedulerFlags, A, B),
     Continue3(PhantomData<N>, SchedulerFlags, A, B, C),
     Continue4(PhantomData<N>, SchedulerFlags, A, B, C, D),
@@ -67,69 +67,59 @@ pub enum Schedule<N: crate::Nif, T, A = (), B = (), C = (), D = (), E = (), F = 
     Continue7(PhantomData<N>, SchedulerFlags, A, B, C, D, E, F, G),
 }
 
-macro_rules! impl_funcs {
-    ($variant:ident $func_name:ident($($arg:ident : $ty:ty,)*)) => {
+macro_rules! impls {
+    ($($variant:ident $func_name:ident($($arg:ident : $ty:ty,)*);)*) => {
         impl<N: crate::Nif, T, A, B, C, D, E, F, G> Schedule<N, T, A, B, C, D, E, F, G> {
-            #[allow(clippy::many_single_char_names)]
+            $(#[allow(clippy::many_single_char_names)]
             #[inline]
             pub fn $func_name(flags: SchedulerFlags, $($arg: $ty),*) -> Self {
                 Self::$variant(PhantomData, flags, $($arg),*)
-            }
+            })*
         }
 
-        impl<N: crate::Nif, T, A, B, C, D, E, F, G> From<(SchedulerFlags, $($ty),*)> for Schedule<N, T, A, B, C, D, E, F, G> {
+        $(impl<N: crate::Nif, T, A, B, C, D, E, F, G> From<(SchedulerFlags, $($ty),*)> for Schedule<N, T, A, B, C, D, E, F, G> {
             #[allow(clippy::many_single_char_names)]
             #[inline]
             fn from((flags, $($arg),*): (SchedulerFlags, $($ty),*)) -> Self {
                 Self::$func_name(flags, $($arg),*)
             }
+        })*
+
+        unsafe impl<N, T, A, B, C, D, E, F, G> NifReturnable for Schedule<N, T, A, B, C, D, E, F, G>
+        where
+            N: crate::Nif,
+            T: crate::Encoder,
+            A: crate::Encoder,
+            B: crate::Encoder,
+            C: crate::Encoder,
+            D: crate::Encoder,
+            E: crate::Encoder,
+            F: crate::Encoder,
+            G: crate::Encoder,
+        {
+            #[inline]
+            unsafe fn into_returned(self, env: Env) -> NifReturned {
+                #[allow(clippy::many_single_char_names)]
+                match self {
+                    Self::Return(res) => NifReturned::Term(res.encode(env).as_c_arg()),
+                    $(Self::$variant(_, flags, $($arg),*) => NifReturned::Reschedule {
+                        fun_name: CStr::from_ptr(N::NAME as *const c_char).into(),
+                        flags,
+                        fun: N::RAW_FUNC,
+                        args: vec![$($arg.encode(env).as_c_arg()),*],
+                    },)*
+                }
+            }
         }
     };
 }
 
-impl_funcs! { Continue continue1(a: A,) }
-impl_funcs! { Continue2 continue2(a: A, b: B,) }
-impl_funcs! { Continue3 continue3(a: A, b: B, c: C,) }
-impl_funcs! { Continue4 continue4(a: A, b: B, c: C, d: D,) }
-impl_funcs! { Continue5 continue5(a: A, b: B, c: C, d: D, e: E,) }
-impl_funcs! { Continue6 continue6(a: A, b: B, c: C, d: D, e: E, f: F,) }
-impl_funcs! { Continue7 continue7(a: A, b: B, c: C, d: D, e: E, f: F, g: G,) }
-
-unsafe impl<N, T, A, B, C, D, E, F, G> NifReturnable for Schedule<N, T, A, B, C, D, E, F, G>
-where
-    N: crate::Nif,
-    T: crate::Encoder,
-    A: crate::Encoder,
-    B: crate::Encoder,
-    C: crate::Encoder,
-    D: crate::Encoder,
-    E: crate::Encoder,
-    F: crate::Encoder,
-    G: crate::Encoder,
-{
-    #[inline]
-    unsafe fn into_returned(self, env: Env) -> NifReturned {
-        macro_rules! branch {
-            ($flags:expr, $($arg:tt),*) => (
-                NifReturned::Reschedule {
-                    fun_name: CStr::from_ptr(N::NAME as *const c_char).into(),
-                    flags: $flags,
-                    fun: N::RAW_FUNC,
-                    args: vec![$($arg.encode(env).as_c_arg()),*],
-                }
-            )
-        }
-
-        #[allow(clippy::many_single_char_names)]
-        match self {
-            Self::Return(res) => NifReturned::Term(res.encode(env).as_c_arg()),
-            Self::Continue(_, flags, a) => branch!(flags, a),
-            Self::Continue2(_, flags, a, b) => branch!(flags, a, b),
-            Self::Continue3(_, flags, a, b, c) => branch!(flags, a, b, c),
-            Self::Continue4(_, flags, a, b, c, d) => branch!(flags, a, b, c, d),
-            Self::Continue5(_, flags, a, b, c, d, e) => branch!(flags, a, b, c, d, e),
-            Self::Continue6(_, flags, a, b, c, d, e, f) => branch!(flags, a, b, c, d, e, f),
-            Self::Continue7(_, flags, a, b, c, d, e, f, g) => branch!(flags, a, b, c, d, e, f, g),
-        }
-    }
+impls! {
+    Continue1 continue1(a: A,);
+    Continue2 continue2(a: A, b: B,);
+    Continue3 continue3(a: A, b: B, c: C,);
+    Continue4 continue4(a: A, b: B, c: C, d: D,);
+    Continue5 continue5(a: A, b: B, c: C, d: D, e: E,);
+    Continue6 continue6(a: A, b: B, c: C, d: D, e: E, f: F,);
+    Continue7 continue7(a: A, b: B, c: C, d: D, e: E, f: F, g: G,);
 }

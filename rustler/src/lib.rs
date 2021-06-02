@@ -51,7 +51,7 @@ pub mod dynamic;
 pub use crate::dynamic::TermType;
 
 pub mod schedule;
-pub use crate::schedule::SchedulerFlags;
+pub use crate::schedule::{Schedule, SchedulerFlags};
 pub mod env;
 pub use crate::env::{Env, OwnedEnv};
 pub mod thread;

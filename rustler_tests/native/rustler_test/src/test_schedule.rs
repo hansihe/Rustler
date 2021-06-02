@@ -1,11 +1,11 @@
-use rustler::schedule::Schedule;
+use rustler::{reschedule, Schedule, SchedulerFlags};
 
 #[rustler::nif]
-fn scheduled_fac(input: u32, result: Option<u32>) -> Schedule<scheduled_fac, u32, u32, u32> {
+fn scheduled_fac<'a>(input: u32, result: Option<u32>) -> Schedule<scheduled_fac, u32, u32, u32> {
     let result = result.unwrap_or(1);
     if input == 0 {
-        Schedule::Result(result)
+        Schedule::Return(result)
     } else {
-        (input - 1, result * input).into()
+        reschedule!(SchedulerFlags::Normal, input - 1, result * input)
     }
 }

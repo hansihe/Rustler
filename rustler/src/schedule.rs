@@ -20,7 +20,7 @@ pub fn consume_timeslice(env: Env, percent: i32) -> bool {
 #[macro_export]
 macro_rules! reschedule {
     ($flags:expr, $($arg:expr),*) => (
-        rustler::schedule::Schedule::from(($flags, $($arg,)*))
+        rustler::Schedule::from(($flags, $($arg,)*))
     )
 }
 
@@ -40,16 +40,16 @@ macro_rules! reschedule {
 /// ## Example:
 /// ```rust,ignore
 /// #[nif]
-/// fn factorial(input: u32, result: Option<u32>) -> Schedule<factorial, u32, u32, u32> {
+/// fn factorial(input: u8, result: Option<u32>) -> Schedule<factorial, u32, u8, Option<u32>> {
 ///     let result = result.unwrap_or(1);
 ///     if input == 0 {
 ///         Schedule::Return(result)
 ///     } else {
-///         // alternatively `Schedule::Continue2(std::marker::PhantomData, SchedulerFlags::Normal, input - 1, result * input)`
-///         // alternatively `Schedule::continue2(SchedulerFlags::Normal, input - 1, result * input)`
-///         // alternatively `Schedule::from((SchedulerFlags::Normal, input - 1, result * input))`
-///         // alternatively `(SchedulerFlags::Normal, input - 1, result * input).into()`
-///         reschedule!(SchedulerFlags::Normal, input - 1, result * input)
+///         // alternatively `Schedule::Continue2(std::marker::PhantomData, SchedulerFlags::Normal, input - 1, Some(result * input as u32))`
+///         // or `Schedule::continue2(SchedulerFlags::Normal, input - 1, Some(result * input as u32))`
+///         // or `Schedule::from((SchedulerFlags::Normal, input - 1, Some(result * input as u32)))`
+///         // or `(SchedulerFlags::Normal, input - 1, Some(result * input as u32)).into()`
+///         reschedule!(SchedulerFlags::Normal, input - 1, Some(result * input as u32))
 ///     }
 /// }
 /// ```

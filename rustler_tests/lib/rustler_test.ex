@@ -74,6 +74,8 @@ defmodule RustlerTest do
 
   def sum_range(_), do: err()
 
+  def scheduled_fac(_, _ \\ nil), do: err()
+
   def bad_arg_error(), do: err()
   def atom_str_error(), do: err()
   def raise_atom_error(), do: err()

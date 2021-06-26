@@ -82,4 +82,6 @@ defmodule RustlerTest do
   def term_with_tuple_error(), do: err()
 
   def nif_attrs_can_rename(), do: err()
+
+  def whereis(_), do: err()
 end

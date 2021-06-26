@@ -22,8 +22,9 @@ pub mod tuple;
 pub use rustler_sys::{
     enif_clear_env, enif_free_env, enif_get_local_pid, enif_make_pid, enif_map_iterator_create,
     enif_map_iterator_destroy, enif_map_iterator_get_pair, enif_map_iterator_next, enif_self,
-    ErlNifMapIterator, ErlNifMapIteratorEntry, ErlNifPid, ERL_NIF_THR_DIRTY_CPU_SCHEDULER,
-    ERL_NIF_THR_DIRTY_IO_SCHEDULER, ERL_NIF_THR_NORMAL_SCHEDULER, ERL_NIF_THR_UNDEFINED,
+    enif_whereis_pid, ErlNifMapIterator, ErlNifMapIteratorEntry, ErlNifPid,
+    ERL_NIF_THR_DIRTY_CPU_SCHEDULER, ERL_NIF_THR_DIRTY_IO_SCHEDULER, ERL_NIF_THR_NORMAL_SCHEDULER,
+    ERL_NIF_THR_UNDEFINED,
 };
 
 pub use std::os::raw::{c_double, c_int, c_uchar, c_uint, c_void};

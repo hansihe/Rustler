@@ -1,5 +1,5 @@
 use crate::wrapper::{pid, ErlNifPid};
-use crate::{Decoder, Encoder, Env, Error, NifResult, Term};
+use crate::{Decoder, Encoder, Env, Error, NifResult, Term, Atom};
 use std::mem::MaybeUninit;
 
 #[derive(Clone)]
@@ -10,6 +10,13 @@ pub struct LocalPid {
 impl LocalPid {
     pub fn as_c_arg(&self) -> &ErlNifPid {
         &self.c
+    }
+
+    ///
+    /// Look up a local process by its registered name.
+    ///
+    pub fn whereis<'a>(env: Env<'a>, name: Atom) -> Option<Self> {
+        unsafe { pid::whereis(env.as_c_arg(), name.as_c_arg()).map(|pid| LocalPid { c: pid }) }
     }
 }
 

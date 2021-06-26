@@ -5,6 +5,7 @@ mod test_dirty;
 mod test_env;
 mod test_error;
 mod test_list;
+mod test_local_pid;
 mod test_map;
 mod test_nif_attrs;
 mod test_primitives;
@@ -73,7 +74,8 @@ rustler::init!(
         test_error::raise_term_with_atom_error,
         test_error::term_with_tuple_error,
         test_nif_attrs::can_rename,
-        test_codegen::reserved_keywords::reserved_keywords_type_echo
+        test_codegen::reserved_keywords::reserved_keywords_type_echo,
+        test_local_pid::whereis,
     ],
     load = load
 );
